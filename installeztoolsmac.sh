@@ -45,19 +45,31 @@ download_and_unzip() {
   fi
 }
 
-# Install semua tools di dalam $HOME
-download_and_unzip "https://download.ericzimmermanstools.com/net9/MFTECmd.zip" "$INSTALL_DIR/MFTECmd"
-download_and_unzip "https://download.ericzimmermanstools.com/net9/PECmd.zip" "$INSTALL_DIR/PECmd"
-download_and_unzip "https://download.ericzimmermanstools.com/net9/RECmd.zip" "$INSTALL_DIR/RECmd"
-download_and_unzip "https://download.ericzimmermanstools.com/net9/EvtxECmd.zip" "$INSTALL_DIR/EvtxECmd"
+# Daftar tool dan alias
+TOOLS=(
+  "AmcacheParser"
+  "AppCompatCacheParser"
+  "EvtxECmd"
+  "JLECmd"
+  "LECmd"
+  "MFTECmd"
+  "PECmd"
+  "RBCmd"
+  "RecentFileCacheParser"
+  "RECmd"
+  "SBECmd"
+  "SQLECmd"
+  "SrumECmd"
+  "SumECmd"
+  "WxTCmd"
+)
+
+# Unduh dan pasang semua tools
+for tool in "${TOOLS[@]}"; do
+  download_and_unzip "https://download.ericzimmermanstools.com/net9/${tool}.zip" "$INSTALL_DIR/$tool"
+  echo "alias ${tool,,}='dotnet $INSTALL_DIR/$tool/${tool}.dll'" >> ~/.zshrc
+done
 
 echo "--------------------------------------------------------------------------------------------"
-echo "Finalising..."
-
-echo "alias mftecmd='dotnet $INSTALL_DIR/MFTECmd/MFTECmd.dll'" >> ~/.zshrc
-echo "alias pecmd='dotnet $INSTALL_DIR/PECmd/PECmd.dll'" >> ~/.zshrc
-echo "alias recmd='dotnet $INSTALL_DIR/RECmd/RECmd.dll'" >> ~/.zshrc
-echo "alias evtxecmd='dotnet $INSTALL_DIR/EvtxECmd/EvtxECmd.dll'" >> ~/.zshrc
-
 echo "${GREEN}Setup complete. Restart your terminal or run 'source ~/.zshrc' to use the tools.${NC}"
 read -p "Press any key to exit script..."
