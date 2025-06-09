@@ -1,36 +1,59 @@
 #!/bin/bash
-ZSHRC="$HOME/.zshrc"
-INSTALL_DIR="$(realpath "$(dirname "$0")")"
 
-TOOLS=(
-  "AmcacheParser"
-  "AppCompatCacheParser"
-  "EvtxECmd"
-  "JLECmd"
-  "LECmd"
-  "MFTECmd"
-  "PECmd"
-  "RBCmd"
-  "RecentFileCacheParser"
-  "RECmd"
-  "SBECmd"
-  "SQLECmd"
-  "SrumECmd"
-  "SumECmd"
-  "WxTCmd"
+GREEN=$'\e[0;32m'
+RED=$'\e[0;31m'
+NC=$'\e[0m'
+
+# Lokasi folder instalasi
+INSTALL_DIR="$(dirname "$(realpath "$0")")/EricZimmermansTools"
+
+# Deteksi shell yang digunakan
+if [[ $SHELL == */zsh ]]; then
+  SHELL_RC="$HOME/.zshrc"
+else
+  SHELL_RC="$HOME/.bashrc"
+fi
+
+# Daftar nama tools dan alias
+declare -A tools=(
+  [AmcacheParser]=amcacheparser
+  [AppCompatCacheParser]=appcompatcacheparser
+  [EvtxECmd]=evtxecmd
+  [JLECmd]=jlecmd
+  [LECmd]=lecmd
+  [MFTECmd]=mftecmd
+  [PECmd]=pecmd
+  [RBCmd]=rbcmd
+  [RecentFileCacheParser]=recentfilecacheparser
+  [RECmd]=recmd
+  [SBECmd]=sbecmd
+  [SQLECmd]=sqlecmd
+  [SrumECmd]=srumecmd
+  [SumECmd]=sumecmd
+  [WxTCmd]=wxtcmd
 )
 
-echo "Uninstalling Zimmerman tools and cleaning up .zshrc..."
+echo "--------------------------------------------------------------------------------------------"
+echo "Menghapus direktori $INSTALL_DIR..."
+rm -rf "$INSTALL_DIR"
 
-for tool in "${TOOLS[@]}"; do
-  echo "Removing ${INSTALL_DIR}/${tool}"
-  rm -rf "${INSTALL_DIR}/${tool}"
+if [[ $? -eq 0 ]]; then
+  echo "${GREEN}Direktori berhasil dihapus.${NC}"
+else
+  echo "${RED}Gagal menghapus direktori.${NC}"
+fi
 
-  alias_line="alias ${tool,,}='dotnet ${INSTALL_DIR}/${tool}/${tool}.dll'"
-  sed -i "\|$alias_line|d" "$ZSHRC"
+echo "--------------------------------------------------------------------------------------------"
+echo "Menghapus alias dari $SHELL_RC..."
+
+# Hapus semua baris alias yang berkaitan
+sed -i '/alias dotnet='\''~\/\.dotnet\/dotnet'\''/d' "$SHELL_RC"
+
+for tool in "${!tools[@]}"; do
+  alias_name="${tools[$tool]}"
+  sed -i "/alias $alias_name='dotnet .*${tool}.dll'/d" "$SHELL_RC"
 done
 
-# Optional cleanup
-sed -i "/alias dotnet='~\/.dotnet\/dotnet'/d" "$ZSHRC"
-
-echo "Done. Run 'source ~/.zshrc' or restart terminal to reflect changes."
+echo "${GREEN}Alias berhasil dihapus.${NC}"
+echo "--------------------------------------------------------------------------------------------"
+echo "Selesai. Jalankan 'source $SHELL_RC' atau buka terminal baru untuk memperbarui shell."
