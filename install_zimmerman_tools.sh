@@ -1,58 +1,76 @@
 #!/bin/bash
+
+# Warna untuk output
 GREEN=$'\e[0;32m'
 RED=$'\e[0;31m'
 NC=$'\e[0m'
-ZSHRC="$HOME/.zshrc"
-INSTALL_DIR="$(realpath "$(dirname "$0")")"
 
-TOOLS=(
-  "AmcacheParser"
-  "AppCompatCacheParser"
-  "EvtxECmd"
-  "JLECmd"
-  "LECmd"
-  "MFTECmd"
-  "PECmd"
-  "RBCmd"
-  "RecentFileCacheParser"
-  "RECmd"
-  "SBECmd"
-  "SQLECmd"
-  "SrumECmd"
-  "SumECmd"
-  "WxTCmd"
-)
+# Lokasi instalasi = folder tempat skrip ini dijalankan
+INSTALL_DIR="$(dirname "$(realpath "$0")")/EricZimmermansTools"
 
-BASE_URL="https://download.ericzimmermanstools.com/net9"
-
-clear
-
-echo "--------------------------------------------------------------------------------------------"
-echo "Installing .NET9 SDK..." 1>&2
-
-if wget https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -O dotnet-install.sh -q && \
-   chmod +x dotnet-install.sh && \
-   ./dotnet-install.sh --channel 9.0 > /dev/null && \
-   rm -f dotnet-install.sh && \
-   grep -qxF "alias dotnet='~/.dotnet/dotnet'" "$ZSHRC" || echo "alias dotnet='~/.dotnet/dotnet'" >> "$ZSHRC"; then
-    echo "${GREEN}.NET9 installed.${NC}" 1>&2
+# Cek shell yang digunakan
+if [[ $SHELL == */zsh ]]; then
+  SHELL_RC="$HOME/.zshrc"
 else
-    echo "${RED}ERROR: Couldn't install .NET9.${NC}" 1>&2
-    exit 1
+  SHELL_RC="$HOME/.bashrc"
 fi
 
-for tool in "${TOOLS[@]}"; do
-  echo "--------------------------------------------------------------------------------------------"
-  echo "Downloading ${tool}.zip..." 1>&2
-  url="$BASE_URL/${tool}.zip"
-  if wget "$url" -q && unzip -o "${tool}.zip" -d "${INSTALL_DIR}/${tool}" > /dev/null && rm -f "${tool}.zip"; then
-    echo "${GREEN}${tool} installed successfully.${NC}" 1>&2
-    alias_line="alias ${tool,,}='dotnet ${INSTALL_DIR}/${tool}/${tool}.dll'"
-    grep -qxF "$alias_line" "$ZSHRC" || echo "$alias_line" >> "$ZSHRC"
+# Daftar tools dan nama alias
+declare -A tools=(
+  [AmcacheParser]=amcacheparser
+  [AppCompatCacheParser]=appcompatcacheparser
+  [EvtxECmd]=evtxecmd
+  [JLECmd]=jlecmd
+  [LECmd]=lecmd
+  [MFTECmd]=mftecmd
+  [PECmd]=pecmd
+  [RBCmd]=rbcmd
+  [RecentFileCacheParser]=recentfilecacheparser
+  [RECmd]=recmd
+  [SBECmd]=sbecmd
+  [SQLECmd]=sqlecmd
+  [SrumECmd]=srumecmd
+  [SumECmd]=sumecmd
+  [WxTCmd]=wxtcmd
+)
+
+mkdir -p "$INSTALL_DIR"
+
+echo "--------------------------------------------------------------------------------------------"
+echo "Downloading and installing tools to $INSTALL_DIR..."
+
+for tool in "${!tools[@]}"; do
+  url="https://download.ericzimmermanstools.com/net9/${tool}.zip"
+  zip_file="${tool}.zip"
+  dest="$INSTALL_DIR/$tool"
+
+  echo "Installing $tool..."
+  wget -q "$url" -O "$zip_file" && \
+  mkdir -p "$dest" && \
+  unzip -o "$zip_file" -d "$dest" > /dev/null && \
+  rm -f "$zip_file"
+
+  if [[ $? -eq 0 ]]; then
+    echo "${GREEN}Installed ${tool}.${NC}"
   else
-    echo "${RED}ERROR: Failed to install ${tool}.${NC}" 1>&2
+    echo "${RED}Failed to install ${tool}.${NC}"
   fi
 done
 
 echo "--------------------------------------------------------------------------------------------"
-echo "${GREEN}All tools installed. Please restart your terminal or run 'source ~/.zshrc' to apply aliases.${NC}"
+echo "Adding aliases to $SHELL_RC..."
+
+# Tambah alias dotnet
+echo "alias dotnet='~/.dotnet/dotnet'" >> "$SHELL_RC"
+
+# Tambah alias untuk semua tools
+for tool in "${!tools[@]}"; do
+  alias_name="${tools[$tool]}"
+  tool_path="$INSTALL_DIR/$tool/${tool}.dll"
+  echo "alias $alias_name='dotnet \"$tool_path\"'" >> "$SHELL_RC"
+done
+
+echo "${GREEN}All aliases added.${NC}"
+
+echo "--------------------------------------------------------------------------------------------"
+echo "Selesai. Jalankan 'source $SHELL_RC' atau buka terminal baru untuk mulai memakai tools ini."
